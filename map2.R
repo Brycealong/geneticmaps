@@ -1,11 +1,12 @@
-install.packages("qtl")
+#install.packages("qtl")
 library(qtl)
+options(timeout = 240)
 # https://storage.cloud.google.com/bucket-quickstart_mindful-linker-430503-t8/hq.vcf.gz
 # df <- read.csv("hq.vcf.gz.csv", header = FALSE)
 # df[2,1] <- ""
 # write.table(df, file = "hq.vcf.gz.rpl.csv", sep = ",",
 #             quote = FALSE, row.names = FALSE, col.names = FALSE)
-mapthis <- read.cross("csv", "https://storage.googleapis.com/bucket-quickstart_mindful-linker-430503-t8/datasets", "hq.vcf.gz.rpl.csv",
+mapthis <- read.cross("csv", "https://storage.googleapis.com/bucket-quickstart_mindful-linker-430503-t8/datasets", "hq.filt.vcf.gz.rpl.csv",
                       estimate.map = FALSE, crosstype = "riself")
 summary(mapthis)
 if (!dir.exists("images")){
@@ -23,8 +24,9 @@ plot(ntyped(mapthis, "mar"), ylab="No. typed individuals",
 dev.off()
 
 mapthis <- subset(mapthis, ind=(ntyped(mapthis)>60000))
+summary(mapthis)
 nt.bymar <- ntyped(mapthis, "mar")
-todrop <- names(nt.bymar[nt.bymar < 250])
+todrop <- names(nt.bymar[nt.bymar < 265])
 mapthis <- drop.markers(mapthis, todrop)
 
 # Identify duplicate individuals
@@ -72,5 +74,25 @@ checkAlleles(mapthis, threshold=5)
 
 rf <- pull.rf(mapthis)
 lod <- pull.rf(mapthis, what="lod")
-png("images/-individuals.png", width = 1200, height = 1200, pointsize = 20)
+png("images/rf-vs-LOD.png", width = 1200, height = 1200, pointsize = 20)
 plot(as.numeric(rf), as.numeric(lod), xlab="Recombination fraction", ylab="LOD score")
+dev.off()
+
+
+lg <- formLinkageGroups(mapthis, max.rf=0.25, min.lod=6)
+table(lg[,2])
+
+mapthis <- formLinkageGroups(mapthis, max.rf=0.35, min.lod=8, reorgMarkers=TRUE)
+png("images/plotRF1.png", width = 1200, height = 1200, pointsize = 20)
+plotRF(mapthis, alternate.chrid=TRUE)
+dev.off()
+
+toswitch <- markernames(mapthis, chr=c(22:27)) 
+mapthis <- switchAlleles(mapthis, toswitch)
+
+mapthis <- est.rf(mapthis)
+png("images/plotRF1.png", width = 1200, height = 1200, pointsize = 20)
+plotRF(mapthis, alternate.chrid=TRUE)
+dev.off()
+
+
