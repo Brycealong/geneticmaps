@@ -8,6 +8,55 @@ options(timeout = 240)
 #             quote = FALSE, row.names = FALSE, col.names = FALSE)
 mapthis <- read.cross("csv", "https://storage.googleapis.com/bucket-quickstart_mindful-linker-430503-t8/datasets", "hq.filt.vcf.gz.rpl.csv",
                       estimate.map = FALSE, crosstype = "riself")
+
+#prepearing a vcf for setting the alleles 
+tx  <- readLines("hq.filt.vcf.gz")
+tx2  <- gsub(pattern = "#CHROM", replace = "CHROM", x = tx)
+writeLines(tx2, con="cross.vcf.wohash.vcf")
+rm(tx,tx2)
+
+vcf <- read.table("cross.vcf.wohash.vcf", header = T, stringsAsFactors = F)
+vcf[,c(10:ncol(vcf))] <- sapply(vcf[,c(10:ncol(vcf))], function(x)(
+  gsub("|", "/", substr(x, 1, 3), fixed = TRUE)
+))
+
+#setting the maternal genotype which will be set to As
+parent.A = "NM9"
+parent.B = "Y158"
+
+#replacing vcf encoded alleles to As, Bs, and Hs
+vcf[,10:ncol(vcf)] <-  t(apply(vcf[,10:ncol(vcf)], 1, function(x)(
+  ifelse(x == x[names(x) == parent.A], "A",
+         ifelse(x == "0/1" | x  == "1/0", "H", 
+                ifelse(x == "./.", "-", "B")))
+)))
+
+#creating qtl formatted file 
+Rqtl <- vcf[,c(3,1,2,10:ncol(vcf))]
+Rqtl$ID <- ifelse(Rqtl$ID == ".", paste0("S", Rqtl$CHROM, "_", Rqtl$POS), Rqtl$ID)
+# Rqtl <- subset(Rqtl, select = -POS)
+Rqtl <- t(Rqtl)
+colnames(Rqtl) <- Rqtl[1,]
+Rqtl <- Rqtl[-1,]
+
+# #approximation of physical distance to genetic distance (1cM ~ 1Mbp)
+# Rqtl[1,] <- as.numeric(sub(".+_", "", colnames(Rqtl))) / 1000000
+# 
+# #adding chromosome numbers
+# Rqtl <- rbind(sub("_.+", "", sub("S", "", colnames(Rqtl))), Rqtl)
+
+# this is optional step needed if the map is going to be reconstructed de novo without prioir information on markers
+#Rqtl[1,] <- 1
+
+#formatting to qtl object
+Rqtl <-  as.data.frame(Rqtl)
+Rqtl <- data.frame(id = rownames(Rqtl), Rqtl, row.names = NULL)
+
+Rqtl[c(1,2),1] <- ""
+
+write.table(Rqtl, "cross.qtl.csv", quote = F, sep = ",", row.names = F, na = "-")
+
+### ----
 summary(mapthis)
 if (!dir.exists("images")){
   dir.create("images")
@@ -25,8 +74,9 @@ dev.off()
 
 mapthis <- subset(mapthis, ind=(ntyped(mapthis)>60000))
 summary(mapthis)
+threshold <- 0.1
 nt.bymar <- ntyped(mapthis, "mar")
-todrop <- names(nt.bymar[nt.bymar < 265])
+todrop <- names(nt.bymar[nt.bymar < (1-threshold)*totmar(mapthis)])
 mapthis <- drop.markers(mapthis, todrop)
 
 # Identify duplicate individuals
@@ -47,14 +97,15 @@ wh <- wh[wh[,1] < wh[,2],]
 #   }
 mapthis <- subset(mapthis, ind=-wh[,2])
 
+# Identify duplicate markers
 print(dup <- findDupMarkers(mapthis, exact.only=FALSE))
 mapthis <- drop.markers(mapthis, unlist(dup))
 
 # Look for markers with distorted segregation patterns
 gt <- geno.table(mapthis)
-gt[gt$P.value < 0.05/totmar(mapthis),]
-
-todrop <- rownames(gt[gt$P.value < 1e-10,])
+# gt[gt$P.value < 0.05/totmar(mapthis),]
+# use bonferroni p.adjust
+todrop <- rownames(gt[p.adjust(gt$P.value, method = "bonferroni") < 0.05,])
 mapthis <- drop.markers(mapthis, todrop)
 
 # Study individuals’ genotype frequencies
