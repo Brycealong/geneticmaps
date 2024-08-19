@@ -20,13 +20,13 @@ parser$add_argument("--crosstype", type = "character", required = T,
 # Filtering options
 parser$add_argument("--filterMissingMarkers", action = "store_true",
                     help = "Filter out markers with missing data")
-parser$add_argument("--filterMissingMarkersThres", type = "double", default = 0.05,
-                    help = "Filter out markers with missing data. For example, if <Thres>=0.05, then any marker with more than 5%% missing observations will be removed. (default %(default)s)" )
+parser$add_argument("--filterMissingMarkersThres", type = "double", default = 0.05, metavar = "<FLOAT>",
+                    help = "Filter out markers with missing data. For example, if <Thres>=0.05, then any marker with more than 5%% missing observations will be removed. (default: %(default)s)" )
 parser$add_argument("--filterDupMarkers", action = "store_true",
                     help = "Filter out markers that have the same genotypes.")
 parser$add_argument("--filterCloseMarkers", action = "store_true",
                     help = "Filter out markers that are closer than a specified threshold")
-parser$add_argument("--filterCloseMarkersThres", type = "double", default = 0.5,
+parser$add_argument("--filterCloseMarkersThres", type = "double", default = 0.5, metavar = "<FLOAT>",
                     help = "Identify the largest subset of markers for which no two adjacent markers are separated by less than the specified distance (in cM). (default: %(default)s)")
 
 parser$add_argument("--filterSegregDistMarkers", action = "store_true",
@@ -34,7 +34,7 @@ parser$add_argument("--filterSegregDistMarkers", action = "store_true",
 
 parser$add_argument("--filterMatchingIndividuals", action = "store_true",
                     help = "Omit individuals with a high proportion of matching genotypes")
-parser$add_argument("--filterMatchingIndividualsThres", type = "double", default = 0.9,
+parser$add_argument("--filterMatchingIndividualsThres", type = "double", default = 0.9, metavar = "<FLOAT>",
                     help = "Threshold for removing one of a pair of individuals with more than <Thres> proportion of matching genotypes across all markers. (default: %(default)s)")
 
 # Parse the arguments

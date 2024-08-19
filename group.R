@@ -53,8 +53,8 @@ if (args$by == "obs") {
   ))
   # show map
   lg <- formLinkageGroups(mapthis, max.rf = args$max_rf, min.lod = args$min_lod)
-  write.table(lg, file = "output/group/compare_sum.tsv", quote = F, 
-              sep = "\t")
+  write.table(lg, file = "output/group/compare_sum.csv", quote = F, 
+              sep = ",")
   # reorganize
   mapthis <- formLinkageGroups(mapthis, max.rf = args$max_rf, min.lod = args$min_lod, reorgMarkers = TRUE)
   print(summaryMap(mapthis))
@@ -64,7 +64,7 @@ if (args$by == "obs") {
 
 map <- pull.map(mapthis)
 maptbl <- map2table(map)
-write.table(maptbl, file = "output/group/sum.tsv", quote = F, 
-            sep = "\t")
+write.table(maptbl, file = "output/group/sum.csv", quote = F, 
+            sep = ",")
 saveRDS(mapthis, file = file.path("output", "group", "mapthis.RDS"))
 

@@ -34,15 +34,25 @@ cat(paste0(
   "\n"
 ))
 for (chr in chrnames(mapthis)) {
-  rip <- ripple(mapthis, chr = chr, window = args$window, method = "likelihood", 
-                error.prob = args$error_prob, map.function = args$map_function)
-  # summary(rip)
-  mapthis <- switch.order(mapthis, chr, rip[2,])
+  result <- tryCatch({
+    rip <- ripple(mapthis, chr = chr, window = args$window, method = "likelihood", 
+                  error.prob = args$error_prob, map.function = args$map_function)
+    mapthis <- switch.order(mapthis, chr, rip[2,])
+    TRUE  # Indicating success
+  }, error = function(e) {
+    message(paste("Error with chromosome", chr, ":", e$message))
+    FALSE  # Indicating failure
+  })
+  
+  if (!result) {
+    message(paste("Skipping chromosome", chr, "due to an error."))
+    next  # Skip to the next iteration if there was an error
+  }
 }
 print(summaryMap(mapthis))
 map <- pull.map(mapthis)
 maptbl <- map2table(map)
-write.table(maptbl, file = "output/ripple/sum.tsv", quote = F, 
-            sep = "\t")
+write.table(maptbl, file = "output/ripple/sum.csv", quote = F, 
+            sep = ",")
 saveRDS(mapthis, file = file.path("output", "ripple", "mapthis.RDS"))
 
