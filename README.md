@@ -316,7 +316,6 @@ Ripple the order using window size 2
 Rscript output.R
 null device 
           1 
-
 ```
 
 ## Outputs
@@ -338,6 +337,9 @@ output
 │   ├── mapthis.RDS
 │   └── sum.csv
 ├── output
+│   ├── sum.csv
+│   ├── rf.csv
+│   ├── lod.csv
 │   └── map.png
 ├── preprocess
 │   └── mapthis.RDS
@@ -348,32 +350,24 @@ output
 
 Each directory contains results of each step.
 
-+ `SNPindex.tsv` : columns in this order.
-  + **CHROM** - The chromosome this SNP is in 
-  + **POS** - The position on the chromosome in nt 
-  + **REF** - The reference allele at that position 
-  + **ALT** - The alternate allele 
-  + **DP.HIGH** - The read depth at that position in the high bulk 
-  + **AD_REF.HIGH** - The allele depth of the reference allele in the high bulk 
-  + **AD_ALT.HIGH** - The alternative allele depth in the high bulk  
-  + **SNPindex.HIGH** - The calculated SNP-index for the high bulk 
-  + Same as above for the low bulk 
-  + **REF_FRQ** - The reference allele frequency as defined above 
-  + **deltaSNP** - The $\Delta$(SNP-index) as defined above
-+ `SNPindex.filt.tsv` : SNPs filtered with user-specified or default thresholds. One column `tricubeDeltaSNP` is added, which represents the smoothed deltaSNP values.
-+ `allchr.png` : delta SNP index for all chromosomes
-  - **dots** : variant
-  - **<span style="color: red; ">RED line</span>** : smoothed delta SNP-index
-    ![allchr](https://github.com/Brycealong/QTL-analysis/blob/main/images/allchr.png)
-+ `chr1.png` : delta SNP index for one chromosome. Same for other chromosomes.
-  ![6a](https://github.com/Brycealong/QTL-analysis/blob/main/images/6A.png)
-+ `distribution.png`: distribution of reference allele frequency, read depths of each sample and SNP index of each sample. Adjust your thresholds using this graph.
-  ![dis](https://github.com/Brycealong/QTL-analysis/blob/main/images/distribution.png)
-+ `analysis.log`: log how many SNPs are filtered out on each parameter.
+- `compare_sum.csv`: the output is a data frame with rows corresponding to the markers and with **two columns**: the initial chromosome assignment and the inferred linkage group. Linkage groups are ordered by the number of markers they contain (from largest to smallest).
+
+- `rf-vs-LOD.png`: Plot of LOD scores versus estimated recombination fractions for all marker pairs.
+
+  
+
++ `sum.csv`: the chromosomes and position information of SNPs
+
++ `rf.csv`, `lod.csv`: matrices containing estimated recombination fraction and LOD value (testing rf = 0.5) respectively. This is a matrix of size (`tot.mar` x `tot.mar`). 
+  
++ `map.png`: constructed linkage map plot.
+  
+  ![map](https://github.com/Brycealong/geneticmaps/blob/main/output/output/map.png)
 
 
 
 ## Citation
 
-- Hiroki Takagi, Akira Abe, Kentaro Yoshida, Shunichi Kosugi, Satoshi Natsume, Chikako Mitsuoka, Aiko Uemura, Hiroe Utsushi, Muluneh Tamiru, Shohei Takuno, Hideki Innan, Liliana M. Cano, Sophien Kamoun, Ryohei Terauchi (2013).  [QTL-seq: rapid mapping of quantitative trait loci in rice by whole genome resequencing of DNA from two bulked populations](https://doi.org/10.1111/tpj.12105). Plant journal 74:174-183.
-- Mansfeld, B.N. and Grumet, R. (2018), QTLseqr: An R Package for Bulk Segregant Analysis with Next-Generation Sequencing. The Plant Genome, 11: 180006. https://doi.org/10.3835/plantgenome2018.01.0006
+- https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8496254/
+- https://rqtl.org/
+- https://rqtl.org/tutorials/geneticmaps.pdf
