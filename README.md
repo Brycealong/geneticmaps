@@ -170,6 +170,9 @@ options:
 
 ```
 $ Rscript import.R -i hq.vcf.gz -ce Un -pA NM9 -pB Y158
+```
+
+```
 Copying original file into output/import...
 Copy complete.
 ```
@@ -178,6 +181,9 @@ Copy complete.
 
 ```
 $ Rscript preprocess.R --crosstype riself --filterMissingMarkers --filterDupMarkers --filterCloseMarkers --filterCloseMarkersThres 5 --filterSegregDistMarkers --filterMatchingIndividuals
+```
+
+```
  --Read the following data:
 	 299  individuals
 	 65364  markers
@@ -218,7 +224,6 @@ Original individual number: 299, Filtered: 46, Remaining: 253
 7B         38   759.1        20.5       457.0
 7D         61   638.8        10.6        94.4
 overall  1276 14021.7        11.2       546.2
-
 ```
 
 #### step3: 
@@ -227,6 +232,9 @@ if `--by obs` this step isn't doing anything.
 
 ```
 $ Rscript group.R --by obs
+```
+
+```
 null device 
           1 
 Using the input groups...
@@ -261,36 +269,64 @@ if `--by obs` this step is estimating the map using the map function.
 
 ```
 $ Rscript order.R --by obs
+```
+
+```
 Using the input orders...
-        n.mar  length ave.spacing max.spacing
-1A         32   208.3         6.7        34.1
-1B         61  1202.6        20.0       966.8
-1D         39   277.6         7.3        55.0
-2A         78   322.3         4.2        33.1
-2B        101   294.8         2.9        19.1
-2D         79   391.1         5.0        33.1
-3A         57   286.6         5.1        29.8
-3B         56  2198.2        40.0       966.8
-3D         47   346.4         7.5        46.6
-4A         91   537.7         6.0       135.8
-4B         74   198.6         2.7        16.6
-4D         25   182.1         7.6        37.2
-5A         96   332.6         3.5        22.9
-5B         96   342.7         3.6        39.4
-5D         54   331.6         6.3        19.8
-6A         36  1332.3        38.1       966.8
-6B         83   245.5         3.0        25.4
-6D         39   251.1         6.6        33.6
-7A         33   276.8         8.6        22.5
-7B         38   241.6         6.5        21.4
-7D         61   414.7         6.9        36.4
-overall  1276 10215.5         8.1       966.8
+ -Re-estimating map
+ -Chromosome 1A 
+ -Chromosome 1B 
+ -Chromosome 1D 
+ -Chromosome 2A 
+ -Chromosome 2B 
+ -Chromosome 2D 
+ -Chromosome 3A 
+ -Chromosome 3B 
+ -Chromosome 3D 
+ -Chromosome 4A 
+ -Chromosome 4B 
+ -Chromosome 4D 
+ -Chromosome 5A 
+ -Chromosome 5B 
+ -Chromosome 5D 
+ -Chromosome 6A 
+ -Chromosome 6B 
+ -Chromosome 6D 
+ -Chromosome 7A 
+ -Chromosome 7B 
+ -Chromosome 7D 
+        n.mar length ave.spacing max.spacing
+1A         32  208.3         6.7        34.1
+1B         60  235.8         4.0        23.9
+1D         39  277.6         7.3        55.0
+2A         78  322.3         4.2        33.1
+2B        101  294.8         2.9        19.1
+2D         79  391.1         5.0        33.1
+3A         57  286.6         5.1        29.8
+3B         55  286.1         5.3        59.6
+3D         47  346.4         7.5        46.6
+4A         91  537.7         6.0       135.8
+4B         74  198.6         2.7        16.6
+4D         25  182.1         7.6        37.2
+5A         96  332.6         3.5        22.9
+5B         96  342.7         3.6        39.4
+5D         54  331.6         6.3        19.8
+6A         35  239.7         7.1        94.5
+6B         83  245.5         3.0        25.4
+6D         39  251.1         6.6        33.6
+7A         33  276.8         8.6        22.5
+7B         38  241.6         6.5        21.4
+7D         61  414.7         6.9        36.4
+overall  1273 6243.9         5.0       135.8
 ```
 
 #### step5: (this step can be skipped)
 
 ```
 $ Rscript ripple.R -w 2
+```
+
+```
 Ripple the order using window size 2
    32 total orders
     --Order 5 
@@ -318,6 +354,9 @@ Ripple the order using window size 2
 
 ```
 Rscript output.R
+```
+
+```
 null device 
           1 
 ```
@@ -354,7 +393,7 @@ output
 
 Each directory contains results of each step.
 
-- `sum.csv`: the chromosomes and position information of SNPs of each step.
+- `sum.csv`: the chromosomes and position information of SNPs of each step. **The final map is in** `output/sum.csv` .
 
 - `compare_sum.csv`: the output is a data frame with rows corresponding to the markers and with **two columns**: the initial chromosome assignment and the inferred linkage group. Linkage groups are ordered by the number of markers they contain (from largest to smallest).
 
