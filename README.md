@@ -154,7 +154,15 @@ options:
 
 ### Step6: output.R
 
+```
+Rscript output.R -h
+usage: output.R [-h] [-m]
 
+options:
+  -h, --help            show this help message and exit
+  -m, --show_marker_names
+                        If specified, marker names are included.
+```
 
 ### Example:
 
@@ -275,7 +283,7 @@ Using the input orders...
 overall  1276 10215.5         8.1       966.8
 ```
 
-#### step5:
+#### step5: (this step can be skipped)
 
 ```
 $ Rscript ripple.R -w 2
@@ -304,49 +312,66 @@ Ripple the order using window size 2
 
 #### step6:
 
+```
+Rscript output.R
+null device 
+          1 
 
+```
 
 ## Outputs
 
 Files inside `OUT_DIR` are like below.
 
 ```
-├── allchr.png
-├── chr1.png
-├── chr2.png
-├── ...
-├── SNPindex.tsv
-├── SNPindex.filt.tsv
-├── distribution.png
-├── analysis.log
+output
+├── group
+│   ├── compare_sum.csv
+│   ├── mapthis.RDS
+│   ├── rf-vs-LOD.png
+│   └── sum.csv
+├── import
+│   ├── org.temp.vcf
+│   ├── org.vcf.gz
+│   └── rqtl.csv
+├── order
+│   ├── mapthis.RDS
+│   └── sum.csv
+├── output
+│   └── map.png
+├── preprocess
+│   └── mapthis.RDS
+└── ripple
+│   ├── mapthis.RDS
+└── └── sum.csv
 ```
 
-- check the results.
+Each directory contains results of each step.
 
-  + `SNPindex.tsv` : columns in this order.
-    + **CHROM** - The chromosome this SNP is in 
-    + **POS** - The position on the chromosome in nt 
-    + **REF** - The reference allele at that position 
-    + **ALT** - The alternate allele 
-    + **DP.HIGH** - The read depth at that position in the high bulk 
-    + **AD_REF.HIGH** - The allele depth of the reference allele in the high bulk 
-    + **AD_ALT.HIGH** - The alternative allele depth in the high bulk  
-    + **SNPindex.HIGH** - The calculated SNP-index for the high bulk 
-    + Same as above for the low bulk 
-    + **REF_FRQ** - The reference allele frequency as defined above 
-    + **deltaSNP** - The $\Delta$(SNP-index) as defined above
-  + `SNPindex.filt.tsv` : SNPs filtered with user-specified or default thresholds. One column `tricubeDeltaSNP` is added, which represents the smoothed deltaSNP values.
-  + `allchr.png` : delta SNP index for all chromosomes
-    - **dots** : variant
-    - **<span style="color: red; ">RED line</span>** : smoothed delta SNP-index
-      ![allchr](https://github.com/Brycealong/QTL-analysis/blob/main/images/allchr.png)
-  + `chr1.png` : delta SNP index for one chromosome. Same for other chromosomes.
-    ![6a](https://github.com/Brycealong/QTL-analysis/blob/main/images/6A.png)
-  + `distribution.png`: distribution of reference allele frequency, read depths of each sample and SNP index of each sample. Adjust your thresholds using this graph.
-    ![dis](https://github.com/Brycealong/QTL-analysis/blob/main/images/distribution.png)
-  + `analysis.log`: log how many SNPs are filtered out on each parameter.
++ `SNPindex.tsv` : columns in this order.
+  + **CHROM** - The chromosome this SNP is in 
+  + **POS** - The position on the chromosome in nt 
+  + **REF** - The reference allele at that position 
+  + **ALT** - The alternate allele 
+  + **DP.HIGH** - The read depth at that position in the high bulk 
+  + **AD_REF.HIGH** - The allele depth of the reference allele in the high bulk 
+  + **AD_ALT.HIGH** - The alternative allele depth in the high bulk  
+  + **SNPindex.HIGH** - The calculated SNP-index for the high bulk 
+  + Same as above for the low bulk 
+  + **REF_FRQ** - The reference allele frequency as defined above 
+  + **deltaSNP** - The $\Delta$(SNP-index) as defined above
++ `SNPindex.filt.tsv` : SNPs filtered with user-specified or default thresholds. One column `tricubeDeltaSNP` is added, which represents the smoothed deltaSNP values.
++ `allchr.png` : delta SNP index for all chromosomes
+  - **dots** : variant
+  - **<span style="color: red; ">RED line</span>** : smoothed delta SNP-index
+    ![allchr](https://github.com/Brycealong/QTL-analysis/blob/main/images/allchr.png)
++ `chr1.png` : delta SNP index for one chromosome. Same for other chromosomes.
+  ![6a](https://github.com/Brycealong/QTL-analysis/blob/main/images/6A.png)
++ `distribution.png`: distribution of reference allele frequency, read depths of each sample and SNP index of each sample. Adjust your thresholds using this graph.
+  ![dis](https://github.com/Brycealong/QTL-analysis/blob/main/images/distribution.png)
++ `analysis.log`: log how many SNPs are filtered out on each parameter.
 
-  
+
 
 ## Citation
 
