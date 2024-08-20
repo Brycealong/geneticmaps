@@ -33,12 +33,57 @@ if (args$by == "obs") {
   cat("Using the input orders...\n")
   newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
   mapthis <- replace.map(mapthis, newmap)
+  
+  ## cleaning large gap
+  # for (chr in chrnames(mapthis)){
+  #   maptbl <- map2table(pull.map(mapthis, chr))
+  #   iqr <- IQR(maptbl$pos)
+  #   lower_bound <- quantile(maptbl$pos, 0.25) - 1.5 * iqr
+  #   upper_bound <- quantile(maptbl$pos, 0.75) + 1.5 * iqr
+  #   badmar <- rownames(maptbl)[which(maptbl$pos > upper_bound | maptbl$pos < lower_bound)]
+  #   mapthis <- drop.markers(mapthis, badmar)
+  # }
+  # # re-estimate map and rf
+  # newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
+  # mapthis <- replace.map(mapthis, newmap)
+  # mapthis <- est.rf(mapthis)
+  dropone <- droponemarker(mapthis, error.prob = args$error_prob, map.function = args$map_function)
+  sum_df <- summary(dropone, lod.column=2)
+  badmar <- rownames(sum_df)[sum_df$LOD > 0]
+  mapthis <- drop.markers(mapthis, badmar)
+  # re-estimate map and rf
+  newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
+  mapthis <- replace.map(mapthis, newmap)
+  mapthis <- est.rf(mapthis)
+
   # show map
   print(summaryMap(mapthis))
 } else if (args$by == "infer"){
   for (chr in chrnames(mapthis)) {
     mapthis <- orderMarkers(mapthis, chr = chr, window = args$window, error.prob = args$error_prob, map.function = args$map_function)
   }
+  ## cleaning large gap
+  # for (chr in chrnames(mapthis)){
+  #   maptbl <- map2table(pull.map(mapthis, chr))
+  #   badmar <- rownames(maptbl)[which(maptbl$pos > quantile(maptbl$pos, 0.9))]
+  #   mapthis <- drop.markers(mapthis, badmar)
+  # }
+  # # re-estimate map and rf
+  # newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
+  # mapthis <- replace.map(mapthis, newmap)
+  # mapthis <- est.rf(mapthis)
+  
+  
+  ## cleaning large gap
+  dropone <- droponemarker(mapthis, error.prob = args$error_prob, map.function = args$map_function)
+  sum_df <- summary(dropone, lod.column=2)
+  badmar <- rownames(sum_df)[sum_df$LOD > 0]
+  mapthis <- drop.markers(mapthis, badmar)
+  # re-estimate map and rf
+  newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
+  mapthis <- replace.map(mapthis, newmap)
+  mapthis <- est.rf(mapthis)
+  
   print(summaryMap(mapthis))
 } else {
   stop("Please specify one method to order the markers.")
