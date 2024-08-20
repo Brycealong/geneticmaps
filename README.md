@@ -12,88 +12,299 @@
 
 ### R libraries
 
-- [tidyverse](https://www.tidyverse.org/)
+- [rqtl](https://rqtl.org/)
 - [argparse](https://cran.r-project.org/web/packages/argparse/index.html)
-- [patchwork](https://patchwork.data-imaginist.com/)
 
 #### Installation using conda
 
-Create a QTL-seq specific environment with R. 
+Create a conda environment. 
 
 ```
-conda create -n qtlseq
-conda activate qtlseq
+conda create -n r-env
+conda activate r-env
 ```
 
 Then install the packages using conda.
 
 ```
-conda install -c conda-forge r-base r-essentials
-conda install -c r r-tidyverse r-argparse r-patchwork r-locfit
+conda install -c conda-forge r-essentials r-argparse r-qtl
 ```
 
 ## Usage
 
-```
-Rscript qtlseq.R -h
+### Step1: import.R
 
-usage: qtlseq.R [-h] [-v <VCF>] [-b1 <CHR>] [-b2 <CHR>]
-                   [-c <CHR> [<CHR> ...]] [-o <DIR>] [-w <INT>] [-ms <DOUBLE>]
-                   [-rf <DOUBLE>] [-d <INT>] [-D <INT>] [--fig-width <DOUBLE>]
-                   [--fig-height <DOUBLE>]
+```
+Rscript import.R -h 
+usage: import.R [-h] -i INPUT [-c <CHR> [<CHR> ...]] [-ce <CHR> [<CHR> ...]]
+                -pA PARENTA -pB PARENTB
 
 options:
   -h, --help            show this help message and exit
-  -v <VCF>, --vcf <VCF>
-                        VCF file. This VCF file must have AD field.
-  -b1 <CHR>, --highbulk <CHR>
-                        High bulk name.
-  -b2 <CHR>, --lowbulk <CHR>
-                        Low bulk name
-  -o <DIR>, --out <DIR>
-                        Output directory.                      
-  -c <CHR> [<CHR> ...], --chrom <CHR> [<CHR> ...]
-                        A list of chromosomes to be included in the analysis,
+  -i INPUT, --input INPUT
+                        Path to the input VCF file. gzipped file is supported.
+  -c <CHR> [<CHR> ...], --chromInclude <CHR> [<CHR> ...]
+                        A list of chromosomes to be INcluded in the analysis,
                         separated by space
-  -w <INT>, --window <INT>
-                        Window size (kb). [25000]
-  -ms <DOUBLE>, --min-SNPindex <DOUBLE>
-                        Cutoff of minimum SNP-index. [0.3]
-  -rf <DOUBLE>, --ref-frq <DOUBLE>
-                        Cutoff of reference allele frequency. Range will be
-                        [rf] to [1 - rf]. [0.3]
-  -d <INT>, --min-depth <INT>
-                        Minimum depth of variants. [8]
-  -D <INT>, --max-depth <INT>
-                        Maximum depth of variants. [250]
-  --fig-width <DOUBLE>  Width allocated in chromosome figure. [10]
-  --fig-height <DOUBLE>
-                        Height allocated in chromosome figure. [5]
+  -ce <CHR> [<CHR> ...], --chromExclude <CHR> [<CHR> ...]
+                        A list of chromosomes to be EXcluded in the analysis,
+                        separated by space
+  -pA PARENTA, --parentA PARENTA
+                        Name of parent A in the vcf file.
+  -pB PARENTB, --parentB PARENTB
+                        Name of parent B in the vcf file.
+```
+
+### Step2: preprocess.R
+
+```
+Rscript preprocess.R -h
+usage: preprocess.R [-h] --crosstype {bc,f2,riself,risib}
+                    [--filterMissingMarkers]
+                    [--filterMissingMarkersThres <FLOAT>] [--filterDupMarkers]
+                    [--filterCloseMarkers] [--filterCloseMarkersThres <FLOAT>]
+                    [--filterSegregDistMarkers] [--filterMatchingIndividuals]
+                    [--filterMatchingIndividualsThres <FLOAT>]
+
+options:
+  -h, --help            show this help message and exit
+  --crosstype {bc,f2,riself,risib}
+                        Cross type for the analysis, choose from [bc, f2,
+                        riself, risib]
+  --filterMissingMarkers
+                        Filter out markers with missing data
+  --filterMissingMarkersThres <FLOAT>
+                        Filter out markers with missing data. For example, if
+                        <Thres>=0.05, then any marker with more than 5%
+                        missing observations will be removed. (default: 0.05)
+  --filterDupMarkers    Filter out markers that have the same genotypes.
+  --filterCloseMarkers  Filter out markers that are closer than a specified
+                        threshold
+  --filterCloseMarkersThres <FLOAT>
+                        Identify the largest subset of markers for which no
+                        two adjacent markers are separated by less than the
+                        specified distance (in cM). (default: 0.5)
+  --filterSegregDistMarkers
+                        Remove markers that do not pass the segregation test
+  --filterMatchingIndividuals
+                        Omit individuals with a high proportion of matching
+                        genotypes
+  --filterMatchingIndividualsThres <FLOAT>
+                        Threshold for removing one of a pair of individuals
+                        with more than <Thres> proportion of matching
+                        genotypes across all markers. (default: 0.9)
+```
+
+### Step3: group.R
+
+```
+Rscript group.R -h
+usage: group.R [-h] [--by {obs,infer}] [--max_rf MAX_RF] [--min_lod MIN_LOD]
+
+options:
+  -h, --help         show this help message and exit
+  --by {obs,infer}   Specify 'obs' to use predefined groups (observation) or
+                     'infer' to use max_rf and min_lod for forming linkage
+                     groups (inference)
+  --max_rf MAX_RF    Maximum recombination fraction for forming linkage groups
+                     (ignored if --group is 'byRef'). (default: 0.25)
+  --min_lod MIN_LOD  Minimum LOD score for forming linkage groups (ignored if
+                     --group is 'byRef'). (default: 3)
 
 ```
 
-### Parameters:
+### Step4: order.R
 
-How reference allele frequency, SNP index for each bulk and delta SNP index are calculated:
-![calc](https://github.com/Brycealong/QTL-analysis/blob/main/images/calc.png)
+```
+Rscript order.R -h      
+usage: order.R [-h] [--by {obs,infer}] [-e ERROR_PROB]
+               [-f {haldane,kosambi,c-f,morgan}] [-w WINDOW]
 
-A note about window sizes:
-The calculations are performed using the `locfit` function from the locfit package using a user defined window size and the degree of the polynomial set to zero. For a discussion about window size, we recommend reading Magwene et al. (2011). In general, **larger windows will produce smoother data**. The functions making these calculations are rather fast, so we recommend testing several window sizes for your data, and then deciding on the optimal size.
+options:
+  -h, --help            show this help message and exit
+  --by {obs,infer}      Specify 'obs' to use predefined orders (observation)
+                        but re-estimate the genetic distances or 'infer' to
+                        reorder markers (inference)
+  -e ERROR_PROB, --error_prob ERROR_PROB
+                        Assumed genotyping error rate used in the final
+                        estimated map. (default: 0.0001)
+  -f {haldane,kosambi,c-f,morgan}, --map_function {haldane,kosambi,c-f,morgan}
+                        map function to use. default is 'haldane'.
+  -w WINDOW, --window WINDOW
+                        window size used to ripple. (default: 3)
+```
+
+### Step5: ripple.R
+
+```
+Rscript ripple.R -h
+usage: ripple.R [-h] [-e ERROR_PROB] [-f {haldane,kosambi,c-f,morgan}]
+                [-w WINDOW]
+
+options:
+  -h, --help            show this help message and exit
+  -e ERROR_PROB, --error_prob ERROR_PROB
+                        Assumed genotyping error rate used in the final
+                        estimated map. (default 0.0001)
+  -f {haldane,kosambi,c-f,morgan}, --map_function {haldane,kosambi,c-f,morgan}
+                        map function to use. default is 'haldane'.
+  -w WINDOW, --window WINDOW
+                        window size used to ripple. (default 3)
+```
+
+### Step6: output.R
+
+
 
 ### Example:
 
+#### step1:
+
 ```
-Rscript qtlseq.R -v wheat-vcf/ALL.vcf.gz \
-        -b1 Mutant123 \
-        -b2 Wild123 \
-        -o OUT_DIR \
-        -c chr1 chr2 chr3 \
-        -w 25000
+$ Rscript import.R -i hq.vcf.gz -ce Un -pA NM9 -pB Y158
+Copying original file into output/import...
+Copy complete.
 ```
 
-### Possible Errors:
+#### step2:
 
-You may encounter `Out of vertex space` error when doing smoothing. Have the window size go higher will generally solve this issue. For more: https://github.com/bmansfeld/QTLseqr/issues/60
+```
+$ Rscript preprocess.R --crosstype riself --filterMissingMarkers --filterDupMarkers --filterCloseMarkers --filterCloseMarkersThres 5 --filterSegregDistMarkers --filterMatchingIndividuals
+ --Read the following data:
+	 299  individuals
+	 65364  markers
+	 1  phenotypes
+ --Cross type: riself 
+Warning message:
+In convert2riself(cross) : Omitting 529989 genotypes with code==2.
+Filtering markers that have more than 5% missing observations...
+Original marker number: 65364, Filtered: 5616, Remaining: 59748
+Filtering markers that are duplicates...
+Original marker number: 59748, Filtered: 43583, Remaining: 16165
+Identifying the largest subset of markers where no two adjacent markers are separated by less than 5 cM...
+Original marker number: 16165, Filtered: 14650, Remaining: 1515
+Filtering markers that have segregation distortion...
+Original marker number: 1515, Filtered: 239, Remaining: 1276
+Filtering individuals that have more than 90% matching genotypes across all markers...
+Original individual number: 299, Filtered: 46, Remaining: 253
+        n.mar  length ave.spacing max.spacing
+1A         32   597.3        19.3       286.5
+1B         61   694.8        11.6       118.3
+1D         39   481.7        12.7       110.4
+2A         78   780.3        10.1        54.2
+2B        101   806.9         8.1        91.6
+2D         79   651.3         8.3        37.7
+3A         57   751.4        13.4       398.9
+3B         56   843.4        15.3       114.7
+3D         47   610.7        13.3       292.0
+4A         91   747.9         8.3        45.3
+4B         74   669.7         9.2        50.1
+4D         25   508.6        21.2       224.0
+5A         96   676.7         7.1        27.3
+5B         96   711.6         7.5        44.8
+5D         54   544.4        10.3       164.4
+6A         36   615.6        17.6        58.2
+6B         83   708.9         8.6        54.3
+6D         39   481.8        12.7        85.3
+7A         33   740.8        23.2       546.2
+7B         38   759.1        20.5       457.0
+7D         61   638.8        10.6        94.4
+overall  1276 14021.7        11.2       546.2
+
+```
+
+#### step3:
+
+```
+$ Rscript group.R --by obs
+null device 
+          1 
+Using the input groups...
+        n.mar  length ave.spacing max.spacing
+1A         32   597.3        19.3       286.5
+1B         61   694.8        11.6       118.3
+1D         39   481.7        12.7       110.4
+2A         78   780.3        10.1        54.2
+2B        101   806.9         8.1        91.6
+2D         79   651.3         8.3        37.7
+3A         57   751.4        13.4       398.9
+3B         56   843.4        15.3       114.7
+3D         47   610.7        13.3       292.0
+4A         91   747.9         8.3        45.3
+4B         74   669.7         9.2        50.1
+4D         25   508.6        21.2       224.0
+5A         96   676.7         7.1        27.3
+5B         96   711.6         7.5        44.8
+5D         54   544.4        10.3       164.4
+6A         36   615.6        17.6        58.2
+6B         83   708.9         8.6        54.3
+6D         39   481.8        12.7        85.3
+7A         33   740.8        23.2       546.2
+7B         38   759.1        20.5       457.0
+7D         61   638.8        10.6        94.4
+overall  1276 14021.7        11.2       546.2
+```
+
+#### step4:
+
+```
+$ Rscript order.R --by obs
+Using the input orders...
+        n.mar  length ave.spacing max.spacing
+1A         32   208.3         6.7        34.1
+1B         61  1202.6        20.0       966.8
+1D         39   277.6         7.3        55.0
+2A         78   322.3         4.2        33.1
+2B        101   294.8         2.9        19.1
+2D         79   391.1         5.0        33.1
+3A         57   286.6         5.1        29.8
+3B         56  2198.2        40.0       966.8
+3D         47   346.4         7.5        46.6
+4A         91   537.7         6.0       135.8
+4B         74   198.6         2.7        16.6
+4D         25   182.1         7.6        37.2
+5A         96   332.6         3.5        22.9
+5B         96   342.7         3.6        39.4
+5D         54   331.6         6.3        19.8
+6A         36  1332.3        38.1       966.8
+6B         83   245.5         3.0        25.4
+6D         39   251.1         6.6        33.6
+7A         33   276.8         8.6        22.5
+7B         38   241.6         6.5        21.4
+7D         61   414.7         6.9        36.4
+overall  1276 10215.5         8.1       966.8
+```
+
+#### step5:
+
+```
+$ Rscript ripple.R -w 2
+Ripple the order using window size 2
+   32 total orders
+    --Order 5 
+    --Order 10 
+    --Order 15 
+    --Order 20 
+    --Order 25 
+    --Order 30 
+   61 total orders
+    --Order 10 
+    --Order 20 
+    --Order 30 
+    --Order 40 
+    --Order 50 
+    --Order 60 
+   39 total orders
+    --Order 5 
+    --Order 10 
+    --Order 15 
+    --Order 20 
+...
+```
+
+#### step6:
+
+
 
 ## Outputs
 
