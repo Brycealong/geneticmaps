@@ -5,7 +5,7 @@ library(argparse)
 # options(timeout = 240)
 
 parser <- ArgumentParser()
-parser$add_argument("-m", "--show_marker_names", action = "store_false",
+parser$add_argument("-m", "--show_marker_names", action = "store_true",
                     help = "If specified, marker names are included.")
 
 # Parse the arguments
@@ -23,6 +23,14 @@ if (file.exists("output/ripple/mapthis.RDS")){
   mapthis <- readRDS("output/order/mapthis.RDS")
 }
 
+map <- pull.map(mapthis)
+maptbl <- map2table(map)
+write.table(maptbl, file = "output/output/sum.csv", quote = F, 
+            sep = ",")
+write.table(pull.rf(mapthis), file = "output/output/rf.csv", quote = F,
+            sep = ",")
+write.table(pull.rf(mapthis, what = "lod"), file = "output/output/lod.csv", quote = F,
+            sep = ",")
 # maxpos <- floor(max(map2table(pull.map(mapthis))$pos))
 # at.axis <- seq(0, maxpos)
 # ## put labels on ruler at every 50 cM
