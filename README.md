@@ -375,3 +375,4 @@ Each directory contains results of each step.
 - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8496254/
 - https://rqtl.org/
 - https://rqtl.org/tutorials/geneticmaps.pdf
+- https://bioinformaticsworkbook.org/dataAnalysis/GenomeAssembly/GeneticMaps/creating-genetic-maps.html#gsc.tab=0
