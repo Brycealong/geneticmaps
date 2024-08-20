@@ -221,7 +221,9 @@ overall  1276 14021.7        11.2       546.2
 
 ```
 
-#### step3:
+#### step3: 
+
+if `--by obs` this step isn't doing anything.
 
 ```
 $ Rscript group.R --by obs
@@ -253,7 +255,9 @@ Using the input groups...
 overall  1276 14021.7        11.2       546.2
 ```
 
-#### step4:
+#### step4: 
+
+if `--by obs` this step is estimating the map using the map function.
 
 ```
 $ Rscript order.R --by obs
@@ -320,7 +324,7 @@ null device
 
 ## Outputs
 
-Files inside `OUT_DIR` are like below.
+The output files are structured inside the directory `output`.
 
 ```
 output
@@ -350,18 +354,18 @@ output
 
 Each directory contains results of each step.
 
+- `sum.csv`: the chromosomes and position information of SNPs of each step.
+
 - `compare_sum.csv`: the output is a data frame with rows corresponding to the markers and with **two columns**: the initial chromosome assignment and the inferred linkage group. Linkage groups are ordered by the number of markers they contain (from largest to smallest).
 
 - `rf-vs-LOD.png`: Plot of LOD scores versus estimated recombination fractions for all marker pairs.
 
   ![rflod](https://github.com/Brycealong/geneticmaps/blob/main/output/group/rf-vs-LOD.png)
 
-+ `sum.csv`: the chromosomes and position information of SNPs
-
 + `rf.csv`, `lod.csv`: matrices containing estimated recombination fraction and LOD value (testing rf = 0.5) respectively. This is a matrix of size (`tot.mar` x `tot.mar`). 
-  
+
 + `map.png`: constructed linkage map plot.
-  
+
   ![map](https://github.com/Brycealong/geneticmaps/blob/main/output/output/map.png)
 
 
