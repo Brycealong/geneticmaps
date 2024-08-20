@@ -354,7 +354,7 @@ Each directory contains results of each step.
 
 - `rf-vs-LOD.png`: Plot of LOD scores versus estimated recombination fractions for all marker pairs.
 
-  
+  ![rflod](https://github.com/Brycealong/geneticmaps/blob/main/output/group/rf-vs-LOD.png)
 
 + `sum.csv`: the chromosomes and position information of SNPs
 
