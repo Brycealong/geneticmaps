@@ -3,6 +3,7 @@
 library(qtl)
 library(argparse)
 options(timeout = 240)
+set.seed(61777369)
 
 # crosstype:
 # "bc" for backcross
