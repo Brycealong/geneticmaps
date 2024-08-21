@@ -47,14 +47,6 @@ if (args$by == "obs") {
   # newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
   # mapthis <- replace.map(mapthis, newmap)
   # mapthis <- est.rf(mapthis)
-  dropone <- droponemarker(mapthis, error.prob = args$error_prob, map.function = args$map_function)
-  sum_df <- summary(dropone, lod.column=2)
-  badmar <- rownames(sum_df)[sum_df$LOD > 0]
-  mapthis <- drop.markers(mapthis, badmar)
-  # re-estimate map and rf
-  newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
-  mapthis <- replace.map(mapthis, newmap)
-  mapthis <- est.rf(mapthis)
 
   # show map
   print(summaryMap(mapthis))
@@ -72,22 +64,38 @@ if (args$by == "obs") {
   # newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
   # mapthis <- replace.map(mapthis, newmap)
   # mapthis <- est.rf(mapthis)
-  
-  
-  ## cleaning large gap
-  dropone <- droponemarker(mapthis, error.prob = args$error_prob, map.function = args$map_function)
-  sum_df <- summary(dropone, lod.column=2)
-  badmar <- rownames(sum_df)[sum_df$LOD > 0]
-  mapthis <- drop.markers(mapthis, badmar)
-  # re-estimate map and rf
-  newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
-  mapthis <- replace.map(mapthis, newmap)
-  mapthis <- est.rf(mapthis)
-  
+
   print(summaryMap(mapthis))
 } else {
   stop("Please specify one method to order the markers.")
 }
+
+iteration_count <- 0  # Initialize the counter
+
+cat("Start removing bad markers...")
+repeat {
+  iteration_count <- iteration_count + 1  # Increment the counter
+  cat("Iteration: ", iteration_count, "\n")  # Print the current iteration
+  
+  dropone <- droponemarker(mapthis, error.prob = args$error_prob, map.function = args$map_function, verbose = F)
+  sum_df <- summary(dropone, lodcolumn=2)
+  badmar <- rownames(sum_df)[sum_df$LOD > 0]
+  
+  if (length(badmar) == 0) {
+    cat("No more bad markers found. Exiting loop.\n")
+    break
+  }
+  
+  cat("Dropping bad markers:", paste(badmar, collapse=", "), "\n")
+  
+  mapthis <- drop.markers(mapthis, badmar)
+  
+  # re-estimate map and rf
+  newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
+  mapthis <- replace.map(mapthis, newmap)
+}
+
+mapthis <- est.rf(mapthis)
 
 map <- pull.map(mapthis)
 maptbl <- map2table(map)
