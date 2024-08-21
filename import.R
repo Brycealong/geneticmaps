@@ -22,6 +22,10 @@ parser$add_argument("-pA", "--parentA", type = "character", required = TRUE,
                     help = "Name of parent A in the vcf file.")
 parser$add_argument("-pB", "--parentB", type = "character", required = TRUE,
                     help = "Name of parent B in the vcf file.")
+# cross type
+parser$add_argument("--crosstype", type = "character", required = T,
+                    choices = c("bc", "f2", "riself", "risib"), help = "Cross type for the analysis, choose from [bc, f2, riself, risib]")
+
 # parser$add_argument("-o", "--output", type = "character", required = TRUE,
 #                     help = "Output direcotory.")
 
@@ -93,3 +97,13 @@ Rqtl <- data.frame(id = rownames(Rqtl), Rqtl, row.names = NULL)
 Rqtl[c(1,2),1] <- ""
 
 write.table(Rqtl, "output/import/rqtl.csv", quote = F, sep = ",", row.names = F, na = "-")
+
+mapthis <- read.cross("csv", "output/import", "rqtl.csv",
+                      estimate.map = FALSE, crosstype = args$crosstype)
+
+print(summaryMap(mapthis))
+saveRDS(mapthis, file = file.path("output", "import", "mapthis.RDS"))
+
+png(file.path("output", "import", "org_map.png"), width = 1200, height = 1200, pointsize = 20)
+plotMap(mapthis)
+dev.off()

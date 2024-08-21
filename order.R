@@ -2,7 +2,10 @@
 #install.packages("qtl")
 library(qtl)
 library(argparse)
+library(parallel)
+library(snow)
 options(timeout = 240)
+set.seed(61777369)
 
 # Create a parser object
 parser <- ArgumentParser()
@@ -51,9 +54,21 @@ if (args$by == "obs") {
   # show map
   print(summaryMap(mapthis))
 } else if (args$by == "infer"){
-  for (chr in chrnames(mapthis)) {
-    mapthis <- orderMarkers(mapthis, chr = chr, window = args$window, error.prob = args$error_prob, map.function = args$map_function)
+  # use rippling
+  rip <- vector("list", nchr(mapthis))
+  names(rip) <- chrnames(mapthis)
+  for(i in chrnames(mapthis)){
+    rip[[i]] <- ripple(mapthis, i, window=args$window,
+                       error.prob=args$error_prob, map.function=args$map_function, 
+                       verbose=FALSE, n.cluster = detectCores())
   }
+  dif.nxo <- sapply(rip, function(a) a[1,ncol(a)]-a[2,ncol(a)])
+  for(i in chrnames(mapthis)) {
+    if(dif.nxo[i] > 0){
+      mapthis <- switch.order(mapthis, i, rip[[i]][2,])
+    }
+  }
+  # mapthis <- orderMarkers(mapthis, window = args$window, error.prob = args$error_prob, map.function = args$map_function)
   ## cleaning large gap
   # for (chr in chrnames(mapthis)){
   #   maptbl <- map2table(pull.map(mapthis, chr))
@@ -70,32 +85,32 @@ if (args$by == "obs") {
   stop("Please specify one method to order the markers.")
 }
 
-iteration_count <- 0  # Initialize the counter
-
-cat("Start removing bad markers...")
-repeat {
-  iteration_count <- iteration_count + 1  # Increment the counter
-  cat("Iteration: ", iteration_count, "\n")  # Print the current iteration
-  
-  dropone <- droponemarker(mapthis, error.prob = args$error_prob, map.function = args$map_function, verbose = F)
-  sum_df <- summary(dropone, lodcolumn=2)
-  badmar <- rownames(sum_df)[sum_df$LOD > 0]
-  
-  if (length(badmar) == 0) {
-    cat("No more bad markers found. Exiting loop.\n")
-    break
-  }
-  
-  cat("Dropping bad markers:", paste(badmar, collapse=", "), "\n")
-  
-  mapthis <- drop.markers(mapthis, badmar)
-  
-  # re-estimate map and rf
-  newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
-  mapthis <- replace.map(mapthis, newmap)
-}
-
-mapthis <- est.rf(mapthis)
+# iteration_count <- 0  # Initialize the counter
+# 
+# cat("Start removing bad markers...\n")
+# repeat {
+#   iteration_count <- iteration_count + 1  # Increment the counter
+#   cat("Iteration: ", iteration_count, "\n")  # Print the current iteration
+#   
+#   dropone <- droponemarker(mapthis, error.prob = args$error_prob, map.function = args$map_function)
+#   sum_df <- summary(dropone, lodcolumn=2)
+#   badmar <- rownames(sum_df)[sum_df$LOD > 0]
+#   
+#   if (length(badmar) == 0) {
+#     cat("No more bad markers found. Exiting loop.\n")
+#     break
+#   }
+#   
+#   cat("Dropping bad markers:", paste(badmar, collapse=", "), "\n")
+#   
+#   mapthis <- drop.markers(mapthis, badmar)
+#   
+#   # re-estimate map and rf
+#   newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
+#   mapthis <- replace.map(mapthis, newmap)
+# }
+# 
+# mapthis <- est.rf(mapthis)
 
 map <- pull.map(mapthis)
 maptbl <- map2table(map)

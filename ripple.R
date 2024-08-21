@@ -2,7 +2,10 @@
 #install.packages("qtl")
 library(qtl)
 library(argparse)
+library(snow)
+library(parallel)
 options(timeout = 240)
+set.seed(61777369)
 
 # Create a parser object
 parser <- ArgumentParser()
@@ -33,23 +36,38 @@ cat(paste0(
   args$window,
   "\n"
 ))
-for (chr in chrnames(mapthis)) {
-  result <- tryCatch({
-    rip <- ripple(mapthis, chr = chr, window = args$window, method = "likelihood", 
-                  error.prob = args$error_prob, map.function = args$map_function,
-                  verbose = F)
-    mapthis <- switch.order(mapthis, chr, rip[2,])
-    TRUE  # Indicating success
-  }, error = function(e) {
-    message(paste("Error with chromosome", chr, ":", e$message))
-    FALSE  # Indicating failure
-  })
-  
-  if (!result) {
-    message(paste("Skipping chromosome", chr, "due to an error."))
-    next  # Skip to the next iteration if there was an error
+# for (chr in chrnames(mapthis)) {
+#   result <- tryCatch({
+#     rip <- ripple(mapthis, chr = chr, window = args$window, method = "likelihood", 
+#                   error.prob = args$error_prob, map.function = args$map_function,
+#                   verbose = F)
+#     mapthis <- switch.order(mapthis, chr, rip[2,])
+#     TRUE  # Indicating success
+#   }, error = function(e) {
+#     message(paste("Error with chromosome", chr, ":", e$message))
+#     FALSE  # Indicating failure
+#   })
+#   
+#   if (!result) {
+#     message(paste("Skipping chromosome", chr, "due to an error."))
+#     next  # Skip to the next iteration if there was an error
+#   }
+# }
+
+rip <- vector("list", nchr(mapthis))
+names(rip) <- chrnames(mapthis)
+for(i in chrnames(mapthis)){
+  rip[[i]] <- ripple(mapthis, i, window=args$window, method="likelihood",
+                     error.prob=args$error_prob, map.function=args$map_function, 
+                     verbose=FALSE, n.cluster = detectCores())
+}
+lod <- sapply(rip, function(a) a[2, ncol(a)-1])
+for(i in chrnames(mapthis)) {
+  if(lod[i] > 0){
+    mapthis <- switch.order(mapthis, i, rip[[i]][2,])
   }
 }
+
 print(summaryMap(mapthis))
 map <- pull.map(mapthis)
 maptbl <- map2table(map)

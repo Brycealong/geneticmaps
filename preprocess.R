@@ -14,9 +14,6 @@ set.seed(61777369)
 # Create a parser object
 parser <- ArgumentParser()
 
-# cross type
-parser$add_argument("--crosstype", type = "character", required = T,
-                    choices = c("bc", "f2", "riself", "risib"), help = "Cross type for the analysis, choose from [bc, f2, riself, risib]")
 
 # Filtering options
 parser$add_argument("--filterMissingMarkers", action = "store_true",
@@ -46,9 +43,9 @@ if (!dir.exists("output/preprocess")) {
   dir.create("output/preprocess", recursive = T)
 }
 
-mapthis <- read.cross("csv", "output/import", "rqtl.csv",
-                      estimate.map = FALSE, crosstype = args$crosstype)
+mapthis <- readRDS("output/import/mapthis.RDS")
 
+print(summaryMap(mapthis))
 ### Filtering ----
 # 1. Filter markers with a lot of missing data
 if (args$filterMissingMarkers) {
