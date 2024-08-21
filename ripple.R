@@ -36,7 +36,8 @@ cat(paste0(
 for (chr in chrnames(mapthis)) {
   result <- tryCatch({
     rip <- ripple(mapthis, chr = chr, window = args$window, method = "likelihood", 
-                  error.prob = args$error_prob, map.function = args$map_function)
+                  error.prob = args$error_prob, map.function = args$map_function,
+                  verbose = F)
     mapthis <- switch.order(mapthis, chr, rip[2,])
     TRUE  # Indicating success
   }, error = function(e) {

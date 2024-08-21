@@ -28,6 +28,7 @@ Then install the packages using conda.
 
 ```
 conda install -c conda-forge r-essentials r-argparse r-qtl
+conda install -c bioconda bcftools (optional)
 ```
 
 ## Usage
@@ -168,8 +169,24 @@ options:
 
 #### step1:
 
+before running this step, it is highly recommended to use `bcftools` to inspect the raw vcf file.
+
+two commands I find useful are:
+
 ```
-$ Rscript import.R -i hq.vcf.gz -ce Un -pA NM9 -pB Y158
+bcftools query -l [vcf] # to check all individuals' names
+```
+
+and
+
+```
+bcftools query -f'%CHROM\n' [vcf] | uniq -c # check chromosomes' names
+```
+
+then to run this step with parent A named `NM9` and B named `Y158` and without chromosome `Un` :
+
+```
+Rscript import.R -i hq.vcf.gz -ce Un -pA NM9 -pB Y158
 ```
 
 ```
@@ -180,7 +197,7 @@ Copy complete.
 #### step2:
 
 ```
-$ Rscript preprocess.R --crosstype riself --filterMissingMarkers --filterDupMarkers --filterCloseMarkers --filterCloseMarkersThres 5 --filterSegregDistMarkers --filterMatchingIndividuals
+Rscript preprocess.R --crosstype riself --filterMissingMarkers --filterDupMarkers --filterCloseMarkers --filterCloseMarkersThres 5 --filterSegregDistMarkers --filterMatchingIndividuals
 ```
 
 ```
@@ -228,10 +245,8 @@ overall  1276 14021.7        11.2       546.2
 
 #### step3: 
 
-if `--by obs` this step isn't doing anything.
-
 ```
-$ Rscript group.R --by obs
+Rscript group.R --by obs
 ```
 
 ```
@@ -268,7 +283,7 @@ overall  1276 14021.7        11.2       546.2
 if `--by obs` this step is estimating the map using the map function.
 
 ```
-$ Rscript order.R --by obs
+Rscript order.R --by obs
 ```
 
 ```
@@ -323,31 +338,11 @@ overall  1273 6243.9         5.0       135.8
 #### step5: (this step can be skipped)
 
 ```
-$ Rscript ripple.R -w 2
+Rscript ripple.R -w 2
 ```
 
 ```
 Ripple the order using window size 2
-   32 total orders
-    --Order 5 
-    --Order 10 
-    --Order 15 
-    --Order 20 
-    --Order 25 
-    --Order 30 
-   61 total orders
-    --Order 10 
-    --Order 20 
-    --Order 30 
-    --Order 40 
-    --Order 50 
-    --Order 60 
-   39 total orders
-    --Order 5 
-    --Order 10 
-    --Order 15 
-    --Order 20 
-...
 ```
 
 #### step6:
