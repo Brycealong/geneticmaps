@@ -29,13 +29,13 @@ mapthis <- readRDS(file = file.path("output", "preprocess", "mapthis.RDS"))
 # Study pairwise marker linkages and estimate recombination fraction
 mapthis <- est.rf(mapthis)
 
-rf <- pull.rf(mapthis)
-lod <- pull.rf(mapthis, what = "lod")
-
-# Save recombination fraction vs. LOD plot
-png("output/group/rf-vs-LOD.png", width = 1200, height = 1200, pointsize = 20)
-plot(as.numeric(rf), as.numeric(lod), xlab = "Recombination fraction", ylab = "LOD score")
-dev.off()
+# rf <- pull.rf(mapthis)
+# lod <- pull.rf(mapthis, what = "lod")
+# 
+# # Save recombination fraction vs. LOD plot
+# png("output/group/rf-vs-LOD.png", width = 1200, height = 1200, pointsize = 20)
+# plot(as.numeric(rf), as.numeric(lod), xlab = "Recombination fraction", ylab = "LOD score")
+# dev.off()
 
 # Form linkage groups
 if (args$by == "obs") {
@@ -68,3 +68,6 @@ write.table(maptbl, file = "output/group/sum.csv", quote = F,
             sep = ",")
 saveRDS(mapthis, file = file.path("output", "group", "mapthis.RDS"))
 
+png(file.path("output", "group", "map.png"), width = 1200, height = 1200, pointsize = 20)
+plotMap(mapthis, show.marker.names = F)
+dev.off()

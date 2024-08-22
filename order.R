@@ -32,24 +32,9 @@ if (!dir.exists("output/order")) {
 
 ### Ordering ----
 mapthis <- readRDS("output/group/mapthis.RDS")
+
 if (args$by == "obs") {
   cat("Using the input orders...\n")
-  newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
-  mapthis <- replace.map(mapthis, newmap)
-  
-  ## cleaning large gap
-  # for (chr in chrnames(mapthis)){
-  #   maptbl <- map2table(pull.map(mapthis, chr))
-  #   iqr <- IQR(maptbl$pos)
-  #   lower_bound <- quantile(maptbl$pos, 0.25) - 1.5 * iqr
-  #   upper_bound <- quantile(maptbl$pos, 0.75) + 1.5 * iqr
-  #   badmar <- rownames(maptbl)[which(maptbl$pos > upper_bound | maptbl$pos < lower_bound)]
-  #   mapthis <- drop.markers(mapthis, badmar)
-  # }
-  # # re-estimate map and rf
-  # newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
-  # mapthis <- replace.map(mapthis, newmap)
-  # mapthis <- est.rf(mapthis)
 
   # show map
   print(summaryMap(mapthis))
@@ -58,32 +43,27 @@ if (args$by == "obs") {
   rip <- vector("list", nchr(mapthis))
   names(rip) <- chrnames(mapthis)
   for(i in chrnames(mapthis)){
-    rip[[i]] <- ripple(mapthis, i, window=args$window,
+    rip[[i]] <- ripple(fill.geno(mapthis, error.prob=args$error_prob), i, window=args$window,
                        error.prob=args$error_prob, map.function=args$map_function, 
-                       verbose=FALSE, n.cluster = detectCores())
+                       tol = 1e-4, verbose=T, n.cluster = detectCores())
   }
   dif.nxo <- sapply(rip, function(a) a[1,ncol(a)]-a[2,ncol(a)])
   for(i in chrnames(mapthis)) {
     if(dif.nxo[i] > 0){
-      mapthis <- switch.order(mapthis, i, rip[[i]][2,])
+      mapthis <- switch.order(mapthis, i, rip[[i]][2,], 
+                              error.prob=args$error_prob, map.function=args$map_function,
+                              tol = 1e-4)
     }
   }
-  # mapthis <- orderMarkers(mapthis, window = args$window, error.prob = args$error_prob, map.function = args$map_function)
-  ## cleaning large gap
-  # for (chr in chrnames(mapthis)){
-  #   maptbl <- map2table(pull.map(mapthis, chr))
-  #   badmar <- rownames(maptbl)[which(maptbl$pos > quantile(maptbl$pos, 0.9))]
-  #   mapthis <- drop.markers(mapthis, badmar)
-  # }
-  # # re-estimate map and rf
-  # newmap <- est.map(mapthis, error.prob = args$error_prob, map.function = args$map_function)
-  # mapthis <- replace.map(mapthis, newmap)
-  # mapthis <- est.rf(mapthis)
 
   print(summaryMap(mapthis))
 } else {
   stop("Please specify one method to order the markers.")
 }
+
+nm <- est.map(mapthis, error.prob=args$error_prob, map.function=args$map_function, 
+              tol = 1e-4, verbose=T, n.cluster = detectCores())
+mapthis <- replace.map(mapthis, nm)
 
 # iteration_count <- 0  # Initialize the counter
 # 
@@ -118,3 +98,6 @@ write.table(maptbl, file = "output/order/sum.csv", quote = F,
             sep = ",")
 saveRDS(mapthis, file = file.path("output", "order", "mapthis.RDS"))
 
+png(file.path("output", "order", "map.png"), width = 1200, height = 1200, pointsize = 20)
+plotMap(mapthis, show.marker.names = F)
+dev.off()

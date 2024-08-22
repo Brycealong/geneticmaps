@@ -4,12 +4,12 @@ library(argparse)
 # library(LinkageMapView)
 # options(timeout = 240)
 
-parser <- ArgumentParser()
-parser$add_argument("-m", "--show_marker_names", action = "store_true",
-                    help = "If specified, marker names are included.")
-
-# Parse the arguments
-args <- parser$parse_args()
+# parser <- ArgumentParser()
+# parser$add_argument("-m", "--show_marker_names", action = "store_true",
+#                     help = "If specified, marker names are included.")
+# 
+# # Parse the arguments
+# args <- parser$parse_args()
 
 # Create output directory if it doesn't exist
 if (!dir.exists("output/output")) {
@@ -27,10 +27,10 @@ map <- pull.map(mapthis)
 maptbl <- map2table(map)
 write.table(maptbl, file = "output/output/sum.csv", quote = F, 
             sep = ",")
-write.table(pull.rf(mapthis), file = "output/output/rf.csv", quote = F,
-            sep = ",")
-write.table(pull.rf(mapthis, what = "lod"), file = "output/output/lod.csv", quote = F,
-            sep = ",")
+# write.table(pull.rf(mapthis), file = "output/output/rf.csv", quote = F,
+#             sep = ",")
+# write.table(pull.rf(mapthis, what = "lod"), file = "output/output/lod.csv", quote = F,
+#             sep = ",")
 # maxpos <- floor(max(map2table(pull.map(mapthis))$pos))
 # at.axis <- seq(0, maxpos)
 # ## put labels on ruler at every 50 cM
@@ -50,6 +50,11 @@ write.table(pull.rf(mapthis, what = "lod"), file = "output/output/lod.csv", quot
 #                  pdf.height = 20, pdf.width = 20, pdf.pointsize = 0.5)
 
 png(file.path("output", "output", "map.png"), width = 1200, height = 1200, pointsize = 20)
-plotMap(mapthis, show.marker.names = args$show_marker_names)
+plotMap(mapthis, show.marker.names = F)
 dev.off()
 
+for (i in chrnames(mapthis)){
+  png(file.path("output", "output", paste0(i, ".png")), width = 1200, height = 1200, pointsize = 20)
+  plotMap(mapthis, chr = i, show.marker.names = T, shift = F)
+  dev.off()
+}

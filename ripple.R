@@ -59,12 +59,13 @@ names(rip) <- chrnames(mapthis)
 for(i in chrnames(mapthis)){
   rip[[i]] <- ripple(mapthis, i, window=args$window, method="likelihood",
                      error.prob=args$error_prob, map.function=args$map_function, 
-                     verbose=FALSE, n.cluster = detectCores())
+                     tol = 1e-4, verbose=T, n.cluster = detectCores())
 }
 lod <- sapply(rip, function(a) a[2, ncol(a)-1])
 for(i in chrnames(mapthis)) {
   if(lod[i] > 0){
-    mapthis <- switch.order(mapthis, i, rip[[i]][2,])
+    mapthis <- switch.order(mapthis, i, rip[[i]][2,], error.prob=args$error_prob, map.function=args$map_function, 
+                            tol = 1e-4)
   }
 }
 
@@ -75,3 +76,6 @@ write.table(maptbl, file = "output/ripple/sum.csv", quote = F,
             sep = ",")
 saveRDS(mapthis, file = file.path("output", "ripple", "mapthis.RDS"))
 
+png(file.path("output", "ripple", "map.png"), width = 1200, height = 1200, pointsize = 20)
+plotMap(mapthis, show.marker.names = F)
+dev.off()

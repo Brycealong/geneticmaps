@@ -38,7 +38,7 @@ conda install -c bioconda bcftools (optional)
 ```
 Rscript import.R -h 
 usage: import.R [-h] -i INPUT [-c <CHR> [<CHR> ...]] [-ce <CHR> [<CHR> ...]]
-                -pA PARENTA -pB PARENTB
+                -pA PARENTA -pB PARENTB --crosstype {bc,f2,riself,risib}
 
 options:
   -h, --help            show this help message and exit
@@ -54,14 +54,16 @@ options:
                         Name of parent A in the vcf file.
   -pB PARENTB, --parentB PARENTB
                         Name of parent B in the vcf file.
+  --crosstype {bc,f2,riself,risib}
+                        Cross type for the analysis, choose from [bc, f2,
+                        riself, risib]
 ```
 
 ### Step2: preprocess.R
 
 ```
 Rscript preprocess.R -h
-usage: preprocess.R [-h] --crosstype {bc,f2,riself,risib}
-                    [--filterMissingMarkers]
+usage: preprocess.R [-h] [--filterMissingMarkers]
                     [--filterMissingMarkersThres <FLOAT>] [--filterDupMarkers]
                     [--filterCloseMarkers] [--filterCloseMarkersThres <FLOAT>]
                     [--filterSegregDistMarkers] [--filterMatchingIndividuals]
@@ -69,9 +71,6 @@ usage: preprocess.R [-h] --crosstype {bc,f2,riself,risib}
 
 options:
   -h, --help            show this help message and exit
-  --crosstype {bc,f2,riself,risib}
-                        Cross type for the analysis, choose from [bc, f2,
-                        riself, risib]
   --filterMissingMarkers
                         Filter out markers with missing data
   --filterMissingMarkersThres <FLOAT>
@@ -113,6 +112,8 @@ options:
                      --group is 'byRef'). (default: 3)
 
 ```
+
+P.S. *LOD score*: A statistical estimate of whether two genetic loci are physically near enough to each other (or "linked") on a particular chromosome that they are likely to be inherited together. **A LOD score of 3 or higher is generally understood to mean that two genes are located close to each other on the chromosome.** In terms of significance, a LOD score of 3 means the odds are 1,000:1 that the two genes are linked and therefore inherited together. Also called logarithm of the odds score.
 
 ### Step4: order.R
 
@@ -167,9 +168,7 @@ options:
 
 ### Example:
 
-#### step1:
-
-before running this step, it is highly recommended to use `bcftools` to inspect the raw vcf file.
+before running these steps, it is highly recommended to use `bcftools` to inspect the raw vcf file.
 
 two commands I find useful are:
 
@@ -183,10 +182,12 @@ and
 bcftools query -f'%CHROM\n' [vcf] | uniq -c # check chromosomes' names
 ```
 
-then to run this step with parent A named `NM9` and B named `Y158` and without chromosome `Un` :
+#### step1:
+
+then to run this step with parent A named `NM9` and B named `Y158` and crosstype `riself` and without chromosome `Un` :
 
 ```
-Rscript import.R -i hq.vcf.gz -ce Un -pA NM9 -pB Y158
+Rscript import.R -i hq.vcf.gz -ce Un -pA NM9 -pB Y158 --crosstype riself
 ```
 
 ```
@@ -196,8 +197,10 @@ Copy complete.
 
 #### step2:
 
+here we only removed duplicate markers and markers that show segregation distortion to simplify.
+
 ```
-Rscript preprocess.R --crosstype riself --filterMissingMarkers --filterDupMarkers --filterCloseMarkers --filterCloseMarkersThres 5 --filterSegregDistMarkers --filterMatchingIndividuals
+Rscript preprocess.R --filterDupMarkers --filterSegregDistMarkers --filterMatchingIndividuals
 ```
 
 ```
@@ -208,39 +211,12 @@ Rscript preprocess.R --crosstype riself --filterMissingMarkers --filterDupMarker
  --Cross type: riself 
 Warning message:
 In convert2riself(cross) : Omitting 529989 genotypes with code==2.
-Filtering markers that have more than 5% missing observations...
-Original marker number: 65364, Filtered: 5616, Remaining: 59748
 Filtering markers that are duplicates...
-Original marker number: 59748, Filtered: 43583, Remaining: 16165
-Identifying the largest subset of markers where no two adjacent markers are separated by less than 5 cM...
-Original marker number: 16165, Filtered: 14650, Remaining: 1515
+Original marker number: 65364, Filtered: 45938, Remaining: 19426
 Filtering markers that have segregation distortion...
-Original marker number: 1515, Filtered: 239, Remaining: 1276
+Original marker number: 19426, Filtered: 1961, Remaining: 17465
 Filtering individuals that have more than 90% matching genotypes across all markers...
 Original individual number: 299, Filtered: 46, Remaining: 253
-        n.mar  length ave.spacing max.spacing
-1A         32   597.3        19.3       286.5
-1B         61   694.8        11.6       118.3
-1D         39   481.7        12.7       110.4
-2A         78   780.3        10.1        54.2
-2B        101   806.9         8.1        91.6
-2D         79   651.3         8.3        37.7
-3A         57   751.4        13.4       398.9
-3B         56   843.4        15.3       114.7
-3D         47   610.7        13.3       292.0
-4A         91   747.9         8.3        45.3
-4B         74   669.7         9.2        50.1
-4D         25   508.6        21.2       224.0
-5A         96   676.7         7.1        27.3
-5B         96   711.6         7.5        44.8
-5D         54   544.4        10.3       164.4
-6A         36   615.6        17.6        58.2
-6B         83   708.9         8.6        54.3
-6D         39   481.8        12.7        85.3
-7A         33   740.8        23.2       546.2
-7B         38   759.1        20.5       457.0
-7D         61   638.8        10.6        94.4
-overall  1276 14021.7        11.2       546.2
 ```
 
 #### step3: 
@@ -249,90 +225,14 @@ overall  1276 14021.7        11.2       546.2
 Rscript group.R --by obs
 ```
 
-```
-null device 
-          1 
-Using the input groups...
-        n.mar  length ave.spacing max.spacing
-1A         32   597.3        19.3       286.5
-1B         61   694.8        11.6       118.3
-1D         39   481.7        12.7       110.4
-2A         78   780.3        10.1        54.2
-2B        101   806.9         8.1        91.6
-2D         79   651.3         8.3        37.7
-3A         57   751.4        13.4       398.9
-3B         56   843.4        15.3       114.7
-3D         47   610.7        13.3       292.0
-4A         91   747.9         8.3        45.3
-4B         74   669.7         9.2        50.1
-4D         25   508.6        21.2       224.0
-5A         96   676.7         7.1        27.3
-5B         96   711.6         7.5        44.8
-5D         54   544.4        10.3       164.4
-6A         36   615.6        17.6        58.2
-6B         83   708.9         8.6        54.3
-6D         39   481.8        12.7        85.3
-7A         33   740.8        23.2       546.2
-7B         38   759.1        20.5       457.0
-7D         61   638.8        10.6        94.4
-overall  1276 14021.7        11.2       546.2
-```
-
 #### step4: 
 
-if `--by obs` this step is estimating the map using the map function.
+we recommend re-order the SNPs despite they are already in sequence by reference genome. The rationale is:
+
+Reference genetic maps are often based on a rather small number of individuals. (For example, the original MIT mouse genetic map was based on an intercross with just 46 individuals.) One’s own data often contains many more individuals, and so may produce a more accurate map. The only caveat is that reference genetic maps generally contain a much more dense set of markers, which provides greater ability to detect genotyping errors. Thus reference genetic maps may be based on cleaner genotype data.
 
 ```
-Rscript order.R --by obs
-```
-
-```
-Using the input orders...
- -Re-estimating map
- -Chromosome 1A 
- -Chromosome 1B 
- -Chromosome 1D 
- -Chromosome 2A 
- -Chromosome 2B 
- -Chromosome 2D 
- -Chromosome 3A 
- -Chromosome 3B 
- -Chromosome 3D 
- -Chromosome 4A 
- -Chromosome 4B 
- -Chromosome 4D 
- -Chromosome 5A 
- -Chromosome 5B 
- -Chromosome 5D 
- -Chromosome 6A 
- -Chromosome 6B 
- -Chromosome 6D 
- -Chromosome 7A 
- -Chromosome 7B 
- -Chromosome 7D 
-        n.mar length ave.spacing max.spacing
-1A         32  208.3         6.7        34.1
-1B         60  235.8         4.0        23.9
-1D         39  277.6         7.3        55.0
-2A         78  322.3         4.2        33.1
-2B        101  294.8         2.9        19.1
-2D         79  391.1         5.0        33.1
-3A         57  286.6         5.1        29.8
-3B         55  286.1         5.3        59.6
-3D         47  346.4         7.5        46.6
-4A         91  537.7         6.0       135.8
-4B         74  198.6         2.7        16.6
-4D         25  182.1         7.6        37.2
-5A         96  332.6         3.5        22.9
-5B         96  342.7         3.6        39.4
-5D         54  331.6         6.3        19.8
-6A         35  239.7         7.1        94.5
-6B         83  245.5         3.0        25.4
-6D         39  251.1         6.6        33.6
-7A         33  276.8         8.6        22.5
-7B         38  241.6         6.5        21.4
-7D         61  414.7         6.9        36.4
-overall  1273 6243.9         5.0       135.8
+Rscript order.R --by infer
 ```
 
 #### step5: (this step can be skipped)
@@ -341,19 +241,10 @@ overall  1273 6243.9         5.0       135.8
 Rscript ripple.R -w 2
 ```
 
-```
-Ripple the order using window size 2
-```
-
 #### step6:
 
 ```
 Rscript output.R
-```
-
-```
-null device 
-          1 
 ```
 
 ## Outputs
@@ -363,42 +254,38 @@ The output files are structured inside the directory `output`.
 ```
 output
 ├── group
-│   ├── compare_sum.csv
+│   ├── map.png
 │   ├── mapthis.RDS
-│   ├── rf-vs-LOD.png
 │   └── sum.csv
 ├── import
+│   ├── map.png
+│   ├── mapthis.RDS
 │   ├── org.temp.vcf
 │   ├── org.vcf.gz
+│   ├── org_map.png
 │   └── rqtl.csv
 ├── order
+│   ├── map.png
 │   ├── mapthis.RDS
 │   └── sum.csv
 ├── output
-│   ├── sum.csv
-│   ├── rf.csv
-│   ├── lod.csv
-│   └── map.png
-├── preprocess
-│   └── mapthis.RDS
-└── ripple
-│   ├── mapthis.RDS
-└── └── sum.csv
+│   ├── 1A.png
+│   ├── 1B.png
+│   ├── 1D.png
+│   ...
+│   ├── map.png
+│   └── sum.csv
+└── preprocess
+    ├── map.png
+    └── mapthis.RDS
 ```
 
 Each directory contains results of each step.
 
-- `sum.csv`: the chromosomes and position information of SNPs of each step. **The final map is in** `output/sum.csv` .
+- `sum.csv`: the chromosomes and position information of SNPs of each step. **The final map information is in** `output/sum.csv` .
+- `compare_sum.csv` (if `--by infer` in running `group.R`): the output is a data frame with rows corresponding to the markers and with **two columns**: the initial chromosome assignment and the inferred linkage group. Linkage groups are ordered by the number of markers they contain (from largest to smallest).
 
-- `compare_sum.csv`: the output is a data frame with rows corresponding to the markers and with **two columns**: the initial chromosome assignment and the inferred linkage group. Linkage groups are ordered by the number of markers they contain (from largest to smallest).
-
-- `rf-vs-LOD.png`: Plot of LOD scores versus estimated recombination fractions for all marker pairs.
-
-  ![rflod](https://github.com/Brycealong/geneticmaps/blob/main/output/group/rf-vs-LOD.png)
-
-+ `rf.csv`, `lod.csv`: matrices containing estimated recombination fraction and LOD value (testing rf = 0.5) respectively. This is a matrix of size (`tot.mar` x `tot.mar`). 
-
-+ `map.png`: constructed linkage map plot.
++ `map.png`: constructed linkage map plot for every step so far. **The final map plot is in** `output/map.png` .
 
   ![map](https://github.com/Brycealong/geneticmaps/blob/main/output/output/map.png)
 

@@ -128,7 +128,8 @@ if (args$filterSegregDistMarkers) {
   ))
   org_count <- totmar(mapthis)
   gt <- geno.table(mapthis)
-  todrop <- rownames(gt[p.adjust(gt$P.value, method = "bonferroni") < 0.05,])
+  p <- gt$P.value
+  todrop <- rownames(gt[p.adjust(p, method = "bonferroni") < 0.05 & !is.na(p),])
   mapthis <- drop.markers(mapthis, todrop)
   count <- totmar(mapthis)
   cat(paste0(
@@ -179,3 +180,6 @@ if (args$filterMatchingIndividuals) {
 print(summaryMap(mapthis))
 saveRDS(mapthis, file = file.path("output", "preprocess", "mapthis.RDS"))
 
+png(file.path("output", "preprocess", "map.png"), width = 1200, height = 1200, pointsize = 20)
+plotMap(mapthis, show.marker.names = F)
+dev.off()
