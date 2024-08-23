@@ -199,6 +199,24 @@ and
 bcftools query -f'%CHROM\n' [vcf] | uniq -c # check chromosomes' names
 ```
 
+##### initial directory structure:
+
+the initial directory must contain all the R scripts and the vcf data file. Then open a terminal at the directory. 
+
+```
+.
+├── dropone.R
+├── group.R
+├── hq.vcf.gz
+├── import.R
+├── order.R
+├── output.R
+├── preprocess.R
+├── ripple.R
+├── refine.sh
+└── start.sh
+```
+
 #### step1:
 
 then to run this step with parent A named `NM9` and B named `Y158` and crosstype `riself` and without chromosome `Un` :
