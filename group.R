@@ -62,12 +62,14 @@ if (args$by == "obs") {
   stop("Please specify one method to group the markers.")
 }
 
-map <- pull.map(mapthis)
-maptbl <- map2table(map)
-write.table(maptbl, file = "output/group/sum.csv", quote = F, 
-            sep = ",")
+# map <- pull.map(mapthis)
+# maptbl <- map2table(map)
+# write.table(maptbl, file = "output/group/sum.csv", quote = F, 
+#             sep = ",")
 saveRDS(mapthis, file = file.path("output", "group", "mapthis.RDS"))
 
 png(file.path("output", "group", "map.png"), width = 1200, height = 1200, pointsize = 20)
 plotMap(mapthis, show.marker.names = F)
 dev.off()
+
+cat("group complete.\n")

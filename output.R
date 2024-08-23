@@ -4,12 +4,12 @@ library(argparse)
 # library(LinkageMapView)
 # options(timeout = 240)
 
-# parser <- ArgumentParser()
-# parser$add_argument("-m", "--show_marker_names", action = "store_true",
-#                     help = "If specified, marker names are included.")
-# 
-# # Parse the arguments
-# args <- parser$parse_args()
+parser <- ArgumentParser()
+parser$add_argument("--dropone", action = "store_true",
+                    help = "If specified, will output the results after drop one marker.")
+
+# Parse the arguments
+args <- parser$parse_args()
 
 # Create output directory if it doesn't exist
 if (!dir.exists("output/output")) {
@@ -17,7 +17,9 @@ if (!dir.exists("output/output")) {
 }
 
 ### output----
-if (file.exists("output/ripple/mapthis.RDS")){
+if (args$dropone){
+  mapthis <- readRDS("output/order/mapthis_dropone.RDS")
+} else if (file.exists("output/ripple/mapthis.RDS")){
   mapthis <- readRDS("output/ripple/mapthis.RDS")
 } else {
   mapthis <- readRDS("output/order/mapthis.RDS")
@@ -58,3 +60,5 @@ for (i in chrnames(mapthis)){
   plotMap(mapthis, chr = i, show.marker.names = T, shift = F)
   dev.off()
 }
+
+cat("output complete.\n")

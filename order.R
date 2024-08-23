@@ -1,9 +1,13 @@
 # order.R
 #install.packages("qtl")
-library(qtl)
-library(argparse)
-library(parallel)
-library(snow)
+suppressPackageStartupMessages(
+  {
+    library(qtl)
+    library(argparse)
+    library(parallel)
+    library(snow)
+  }
+)
 options(timeout = 240)
 set.seed(61777369)
 
@@ -92,12 +96,14 @@ mapthis <- replace.map(mapthis, nm)
 # 
 # mapthis <- est.rf(mapthis)
 
-map <- pull.map(mapthis)
-maptbl <- map2table(map)
-write.table(maptbl, file = "output/order/sum.csv", quote = F, 
-            sep = ",")
+# map <- pull.map(mapthis)
+# maptbl <- map2table(map)
+# write.table(maptbl, file = "output/order/sum.csv", quote = F, 
+#             sep = ",")
 saveRDS(mapthis, file = file.path("output", "order", "mapthis.RDS"))
 
 png(file.path("output", "order", "map.png"), width = 1200, height = 1200, pointsize = 20)
 plotMap(mapthis, show.marker.names = F)
 dev.off()
+
+cat("order complete.\n")

@@ -45,7 +45,12 @@ if (!dir.exists("output/preprocess")) {
 
 mapthis <- readRDS("output/import/mapthis.RDS")
 
-print(summaryMap(mapthis))
+# Initialize an empty data frame to store the differences in marker counts
+marker_diff <- data.frame(Chromosome = chrnames(mapthis))
+rownames(marker_diff) <- marker_diff$Chromosome
+marker_diff$Chromosome <- NULL  # Remove the Chromosome column as it's redundant
+
+# print(summaryMap(mapthis))
 ### Filtering ----
 # 1. Filter markers with a lot of missing data
 if (args$filterMissingMarkers) {
@@ -56,9 +61,14 @@ if (args$filterMissingMarkers) {
     "\n"
   ))
   org_count <- totmar(mapthis)
+  marker_before <- nmar(mapthis)
+  ###
   nt.bymar <- ntyped(mapthis, "mar")
   todrop <- names(nt.bymar[nt.bymar < (1 - args$filterMissingMarkersThres) * nind(mapthis)])
   mapthis <- drop.markers(mapthis, todrop)
+  ###
+  marker_after <- nmar(mapthis)
+  marker_diff$MissingMarkers <- marker_before - marker_after
   count <- totmar(mapthis)
   cat(paste0(
     "Original marker number: ",
@@ -78,8 +88,13 @@ if (args$filterDupMarkers){
     "\n"
   ))
   org_count <- totmar(mapthis)
+  marker_before <- nmar(mapthis)
+  ###
   dup <- findDupMarkers(mapthis, exact.only = FALSE)
   mapthis <- drop.markers(mapthis, unlist(dup))
+  ###
+  marker_after <- nmar(mapthis)
+  marker_diff$DupMarkers <- marker_before - marker_after
   count <- totmar(mapthis)
   cat(paste0(
     "Original marker number: ",
@@ -102,12 +117,17 @@ if (args$filterCloseMarkers) {
     "\n"
   ))
   org_count <- totmar(mapthis)
+  marker_before <- nmar(mapthis)
+  ###
   for (chr in chrnames(mapthis)) {
     mark.cur <- markernames(mapthis, chr)
     tokeep <- pickMarkerSubset(pull.map(mapthis)[[chr]], args$filterCloseMarkersThres)
     todrop <- setdiff(mark.cur, tokeep)
     mapthis <- drop.markers(mapthis, todrop)
   }
+  ###
+  marker_after <- nmar(mapthis)
+  marker_diff$CloseMarkers <- marker_before - marker_after
   count <- totmar(mapthis)
   cat(paste0(
     "Original marker number: ",
@@ -127,10 +147,15 @@ if (args$filterSegregDistMarkers) {
     "\n"
   ))
   org_count <- totmar(mapthis)
+  marker_before <- nmar(mapthis)
+  ###
   gt <- geno.table(mapthis)
   p <- gt$P.value
   todrop <- rownames(gt[p.adjust(p, method = "bonferroni") < 0.05 & !is.na(p),])
   mapthis <- drop.markers(mapthis, todrop)
+  ###
+  marker_after <- nmar(mapthis)
+  marker_diff$SegregDistMarkers <- marker_before - marker_after
   count <- totmar(mapthis)
   cat(paste0(
     "Original marker number: ",
@@ -142,6 +167,31 @@ if (args$filterSegregDistMarkers) {
     "\n"
   ))
 }
+
+# left markers
+marker_diff$MarkersLeft <- nmar(mapthis)
+
+# Transpose the data frame to get a suitable format for plotting
+marker_diff_matrix <- t(marker_diff)
+
+# Define colors for each filtering step
+cs <- c("MissingMarkers" = "#993404",
+        "DupMarkers" = "#FB6A4A", 
+        "CloseMarkers" = "#FED976", 
+        "SegregDistMarkers" = "#FFFFCC",
+        "MarkersLeft" = "white")
+
+png(file.path("output", "preprocess", "marker_diff.png"), width = 1200, height = 1200, pointsize = 20)
+# par(mar = c(5, 4, 4, 6) + 0.1)
+barplot(marker_diff_matrix,
+        col = cs[rownames(marker_diff_matrix)],
+        legend.text = rownames(marker_diff_matrix), 
+        args.legend = list(x = "topleft", cex = 0.8),
+        main = "Stacked Barplot for Filtered Markers",
+        xlab = "Chromosome", 
+        ylab = "Number of Markers"
+)
+dev.off()
 
 ## Filter individuals
 #Identify and omit individuals with high matching genotypes
@@ -183,3 +233,5 @@ saveRDS(mapthis, file = file.path("output", "preprocess", "mapthis.RDS"))
 png(file.path("output", "preprocess", "map.png"), width = 1200, height = 1200, pointsize = 20)
 plotMap(mapthis, show.marker.names = F)
 dev.off()
+
+cat("preprocess complete.\n")

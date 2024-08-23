@@ -20,8 +20,8 @@
 Create a conda environment. 
 
 ```
-conda create -n r-env
-conda activate r-env
+conda create -n qtlmap
+conda activate qtlmap
 ```
 
 Then install the packages using conda.
@@ -167,7 +167,7 @@ options:
   --dropone   If specified, will output the results after drop one marker.
 ```
 
-### Added steps:
+### Refining step:
 
 ```
 Rscript dropone.R -h
@@ -263,11 +263,34 @@ Rscript ripple.R -w 2
 Rscript output.R
 ```
 
-modify the results:
+For the above steps, we could use a shell script / job (like a PBS script) to run in the back.
 
-We see in the output map, we have some large gaps and some of them are caused by one internal marker. This indicate that there may be some genotyping error about this marker and let's drop one marker to make this correct.
+Here I bundled the steps for my data:
 
-![map](https://github.com/Brycealong/geneticmaps/blob/main/badoutput/map.png)
+```bash
+# start.sh
+
+source activate qtlmap
+Rscript import.R -i hq.vcf.gz -ce Un -pA NM9 -pB Y158 --crosstype riself
+Rscript preprocess.R --filterDupMarkers --filterCloseMarkers --filterCloseMarkersThres 0.5 --filterSegregDistMarkers --filterMatchingIndividuals
+Rscript group.R --by obs
+Rscript order.R --by infer -e 0.01
+Rscript output.R
+```
+
+To run with `nohup`:
+
+```
+nohup sh start.sh &
+```
+
+#### Refining step:
+
+We see in the output map, that we have some large gaps and some of them are caused by one internal marker. 
+
+![badmap](https://github.com/Brycealong/geneticmaps/blob/main/images/badmap.png)
+
+This indicate that there may be some genotyping error about this marker and let's drop one marker to make this correct.
 
 ```
 Rscript dropone.R -e 0.01 
@@ -279,49 +302,80 @@ this command may take a while to run because it is estimating the map every time
 Rscript output.R --dropone
 ```
 
-Note: it is possible to drop one marker multiple times until you get a nice map. To do that, modify the source code in `dropone.R` using `repeat` or other loops. But I recommend only do this **once** because it is super time- and memory-consuming to run `droponemarker()`.
+Note: this run will overwrite the previous output. If you would want to go back to that, just run `output.R` again without specifying `--dropone`.
+
+-------
+
+We could also bundle the refining steps into a script:
+
+```bash
+# refine.sh
+
+source activate qtlmap
+Rscript dropone.R -e 0.01 
+Rscript output.R --dropone
+```
+
+and run it in the back using 
+
+```
+nohup sh refine.sh &
+```
+
+Note: it is possible to drop one marker multiple times until you get a nice map. To do that, modify the source code in `dropone.R` using `repeat` or other loops. But I recommend only do this **once** because it is super time- and memory-consuming to run `droponemarker()`. My best bet is to refine the preprocessing step, play around with the threshold to filter different set of markers and re-run the standard step.
+
+-------
+
+The final map is like below:
+
+![goodmap](https://github.com/Brycealong/geneticmaps/blob/main/images/goodmap.png)
 
 ## Outputs
 
 The output files are structured inside the directory `output`.
 
 ```
-output
+.
 ├── group
 │   ├── map.png
-│   ├── mapthis.RDS
-│   └── sum.csv
+│   └── mapthis.RDS
 ├── import
-│   ├── map.png
 │   ├── mapthis.RDS
 │   ├── org.temp.vcf
 │   ├── org.vcf.gz
 │   ├── org_map.png
 │   └── rqtl.csv
 ├── order
+│   ├── dropone_result.png
 │   ├── map.png
+│   ├── map_dropone.png
 │   ├── mapthis.RDS
-│   └── sum.csv
+│   └── mapthis_dropone.RDS
 ├── output
 │   ├── 1A.png
 │   ├── 1B.png
 │   ├── 1D.png
+│   ├── 2A.png
 │   ...
+│   ├── 7D.png
 │   ├── map.png
 │   └── sum.csv
 └── preprocess
     ├── map.png
-    └── mapthis.RDS
+    ├── mapthis.RDS
+    └── marker_diff.png
 ```
 
 Each directory contains results of each step.
 
-- `sum.csv`: the chromosomes and position information of SNPs of each step. **The final map information is in** `output/sum.csv` .
-- `compare_sum.csv` (if `--by infer` in running `group.R`): the output is a data frame with rows corresponding to the markers and with **two columns**: the initial chromosome assignment and the inferred linkage group. Linkage groups are ordered by the number of markers they contain (from largest to smallest).
+- `output/sum.csv`: the chromosomes and position information of SNPs. 
+
+- `preprocess/marker_diff.png`: stacked barplot indicating the composition of filtered markers of each criterion and markers left for every chromosome.
+
+  ![marker_diff](https://github.com/Brycealong/geneticmaps/blob/main/images/marker_diff.png)
 
 + `map.png`: constructed linkage map plot for every step so far. **The final map plot is in** `output/map.png` .
-
-  ![map](https://github.com/Brycealong/geneticmaps/blob/main/output/output/map.png)
++ `compare_sum.csv` (if `--by infer` in running `group.R`): the output is a data frame with rows corresponding to the markers and with **two columns**: the initial chromosome assignment and the inferred linkage group. Linkage groups are ordered by the number of markers they contain (from largest to smallest).
 
 
 

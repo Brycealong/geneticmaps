@@ -103,6 +103,7 @@ mapthis <- read.cross("csv", "output/import", "rqtl.csv",
 
 print(summaryMap(mapthis))
 saveRDS(mapthis, file = file.path("output", "import", "mapthis.RDS"))
+cat("import complete.\n")
 
 png(file.path("output", "import", "org_map.png"), width = 1200, height = 1200, pointsize = 20)
 plotMap(mapthis)

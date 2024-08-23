@@ -1,9 +1,13 @@
 # ripple.R
 #install.packages("qtl")
-library(qtl)
-library(argparse)
-library(snow)
-library(parallel)
+suppressPackageStartupMessages(
+  {
+    library(qtl)
+    library(argparse)
+    library(parallel)
+    library(snow)
+  }
+)
 options(timeout = 240)
 set.seed(61777369)
 
@@ -79,3 +83,5 @@ saveRDS(mapthis, file = file.path("output", "ripple", "mapthis.RDS"))
 png(file.path("output", "ripple", "map.png"), width = 1200, height = 1200, pointsize = 20)
 plotMap(mapthis, show.marker.names = F)
 dev.off()
+
+cat("ripple complete.\n")
