@@ -267,7 +267,7 @@ modify the results:
 
 We see in the output map, we have some large gaps and some of them are caused by one internal marker. This indicate that there may be some genotyping error about this marker and let's drop one marker to make this correct.
 
-![map](https://github.com/Brycealong/geneticmaps/blob/main/badoutput/map.pnghttps://github.com/Brycealong/geneticmaps/blob/main/badoutput/map.png)
+![map](https://github.com/Brycealong/geneticmaps/blob/main/badoutput/map.png)
 
 ```
 Rscript dropone.R -e 0.01 
