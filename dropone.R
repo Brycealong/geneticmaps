@@ -1,9 +1,13 @@
 # dropone.R
 #install.packages("qtl")
-library(qtl)
-library(argparse)
-library(parallel)
-library(snow)
+suppressPackageStartupMessages(
+  {
+    library(qtl)
+    library(argparse)
+    library(parallel)
+    library(snow)
+  }
+)
 options(timeout = 240)
 set.seed(61777369)
 
