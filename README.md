@@ -14,6 +14,7 @@
 
 - [rqtl](https://rqtl.org/)
 - [argparse](https://cran.r-project.org/web/packages/argparse/index.html)
+- [snow](https://cran.r-project.org/web/packages/snow/index.html)
 
 #### Installation using conda
 
@@ -27,7 +28,7 @@ conda activate qtlmap
 Then install the packages using conda.
 
 ```
-conda install -c conda-forge r-essentials r-argparse r-qtl
+conda install -c conda-forge r-essentials r-argparse r-qtl r-snow
 conda install -c bioconda bcftools (optional)
 ```
 
