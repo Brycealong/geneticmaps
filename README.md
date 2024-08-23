@@ -113,7 +113,9 @@ options:
 
 ```
 
-P.S. *LOD score*: A statistical estimate of whether two genetic loci are physically near enough to each other (or "linked") on a particular chromosome that they are likely to be inherited together. **A LOD score of 3 or higher is generally understood to mean that two genes are located close to each other on the chromosome.** In terms of significance, a LOD score of 3 means the odds are 1,000:1 that the two genes are linked and therefore inherited together. Also called logarithm of the odds score.
+**Note:**
+
+*LOD score*: A statistical estimate of whether two genetic loci are physically near enough to each other (or "linked") on a particular chromosome that they are likely to be inherited together. **A LOD score of 3 or higher is generally understood to mean that two genes are located close to each other on the chromosome.** In terms of significance, a LOD score of 3 means the odds are 1,000:1 that the two genes are linked and therefore inherited together. Also called logarithm of the odds score.
 
 ### Step4: order.R
 
@@ -158,12 +160,26 @@ options:
 
 ```
 Rscript output.R -h
-usage: output.R [-h] [-m]
+usage: output.R [-h] [--dropone]
+
+options:
+  -h, --help  show this help message and exit
+  --dropone   If specified, will output the results after drop one marker.
+```
+
+### Added steps:
+
+```
+Rscript dropone.R -h
+usage: dropone.R [-h] [-e ERROR_PROB] [-f {haldane,kosambi,c-f,morgan}]
 
 options:
   -h, --help            show this help message and exit
-  -m, --show_marker_names
-                        If specified, marker names are included.
+  -e ERROR_PROB, --error_prob ERROR_PROB
+                        Assumed genotyping error rate used in the final
+                        estimated map. (default: 0.0001)
+  -f {haldane,kosambi,c-f,morgan}, --map_function {haldane,kosambi,c-f,morgan}
+                        map function to use. default is 'haldane'.
 ```
 
 ### Example:
@@ -246,6 +262,24 @@ Rscript ripple.R -w 2
 ```
 Rscript output.R
 ```
+
+modify the results:
+
+We see in the output map, we have some large gaps and some of them are caused by one internal marker. This indicate that there may be some genotyping error about this marker and let's drop one marker to make this correct.
+
+![map](/Users/weimiaolong/Desktop/2024summerintern/geneticmaps/hq/output/output/map.png)
+
+```
+Rscript dropone.R -e 0.01 
+```
+
+this command may take a while to run because it is estimating the map every time it drops a marker of a specific chromosome. And after this, we can do run `output.R` again but with the argument `--dropone`.
+
+```
+Rscript output.R --dropone
+```
+
+Note: it is possible to drop one marker multiple times until you get a nice map. To do that, modify the source code in `dropone.R` using `repeat` or other loops. But I recommend only do this **once** because it is super time- and memory-consuming to run `droponemarker()`.
 
 ## Outputs
 
